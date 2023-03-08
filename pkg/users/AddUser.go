@@ -4,7 +4,6 @@ import (
 	"gin-clean-archi/pkg/common/model"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"log"
 	"regexp"
 )
 
@@ -47,7 +46,6 @@ func (h handler) AddUser(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, result.Error.Error())
 	}
 
-	log.Println("insert successes")
 	return c.Status(fiber.StatusCreated).JSON(&user)
 }
 
