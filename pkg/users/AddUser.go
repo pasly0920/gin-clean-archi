@@ -2,18 +2,26 @@ package users
 
 import (
 	"gin-clean-archi/pkg/common/model"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"log"
+	"regexp"
 )
 
+func PhoneValidation(fl validator.FieldLevel) bool {
+	phoneRegex := regexp.MustCompile(`^\d{3}-\d{4}-\d{4}$`)
+	return phoneRegex.MatchString(fl.Field().String())
+}
+
 type AddUserRequestBody struct {
-	Username     string `json:"username"`
-	Name         string `json:"name"`
-	Nickname     string `json:"nickname"`
-	AvatarID     uint64 `json:"avatarId"`
-	PhoneNumber  string `json:"phoneNumber"`
-	StudentYear  int    `json:"studentYear"`
-	StudentGroup string `json:"studentGroup"`
-	MajorCode    int    `json:"majorCode"`
+	Username     string `json:"username" validate:"required"`
+	Name         string `json:"name" validate:"required"`
+	Nickname     string `json:"nickname" validate:"required"`
+	AvatarID     uint64 `json:"avatarId" validate:"required,number"`
+	PhoneNumber  string `json:"phoneNumber" validate:"required,phone"`
+	StudentYear  int    `json:"studentYear" validate:"required,number"`
+	StudentGroup string `json:"studentGroup" validate:"required"`
+	MajorCode    int    `json:"majorCode" validate:"required,number"`
 }
 
 func (h handler) AddUser(c *fiber.Ctx) error {
@@ -24,6 +32,14 @@ func (h handler) AddUser(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
+	validate := validator.New()
+	validate.RegisterValidation("phone", PhoneValidation)
+
+	//validate error
+	if err := validate.Struct(body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
 	user := h.getUserFromBody(body)
 
 	// insert new db entry
@@ -31,6 +47,7 @@ func (h handler) AddUser(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, result.Error.Error())
 	}
 
+	log.Println("insert successes")
 	return c.Status(fiber.StatusCreated).JSON(&user)
 }
 
