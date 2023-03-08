@@ -18,6 +18,7 @@ func main() {
 
 	app := fiber.New()
 	db := db.Init(c.DBUrl)
+	app.Use(recover())
 
 	app.Get("/", func(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusOK).SendString("")
